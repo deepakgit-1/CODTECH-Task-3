@@ -1,0 +1,73 @@
+# Import necessary libraries
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+# Load the dataset
+df = pd.read_csv('Creditcard.csv')
+
+# Display basic info about the dataset
+print(df.info())
+
+# Check for missing values
+print(df.isnull().sum())
+
+# Drop rows with missing values
+df = df.dropna()
+
+# Separate features and target variable
+X = df.drop('Class', axis=1)
+y = df['Class']
+
+# Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Standardize features
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+from sklearn.ensemble import IsolationForest
+from sklearn.metrics import classification_report, accuracy_score
+
+# Define the model
+model = IsolationForest(random_state=42, contamination=0.01)  # Adjust contamination based on your dataset
+
+# Fit the model
+model.fit(X_train)
+
+# Predict anomalies (1 for normal, -1 for outliers/anomalies)
+y_pred_train = model.predict(X_train)
+y_pred_test = model.predict(X_test)
+
+# Convert predictions to binary labels (0: normal, 1: fraud)
+y_pred_train[y_pred_train == 1] = 0
+y_pred_train[y_pred_train == -1] = 1
+y_pred_test[y_pred_test == 1] = 0
+y_pred_test[y_pred_test == -1] = 1
+
+# Evaluate the model
+print("Training Accuracy:", accuracy_score(y_train, y_pred_train))
+print("Test Accuracy:", accuracy_score(y_test, y_pred_test))
+
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred_test))
+
+from sklearn.ensemble import RandomForestClassifier
+
+# Define the model
+model_rf = RandomForestClassifier(random_state=42, class_weight='balanced')
+
+# Fit the model
+model_rf.fit(X_train, y_train)
+
+# Predictions
+y_pred_train_rf = model_rf.predict(X_train)
+y_pred_test_rf = model_rf.predict(X_test)
+
+# Evaluate the model
+print("Training Accuracy:", accuracy_score(y_train, y_pred_train_rf))
+print("Test Accuracy:", accuracy_score(y_test, y_pred_test_rf))
+
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred_test_rf))
